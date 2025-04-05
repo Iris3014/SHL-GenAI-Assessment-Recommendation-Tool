@@ -8,11 +8,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
+import os
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("SHL-GenAI-Assessment-Recommendation-Tool/SHL/datasets/shl_catalog.csv")
-# Load local embedding model
+    base_path = os.path.dirname(__file__)
+    csv_path = os.path.join(base_path, "datasets", "shl_catalog.csv")
+    return pd.read_csv(csv_path)
+
 @st.cache_resource
 def load_local_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
