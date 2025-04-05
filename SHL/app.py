@@ -1,34 +1,34 @@
 import os
-os.environ["TRANSFORMERS_NO_TF"] = "1"  # Prevents TensorFlow-related import issues
+os.environ["TRANSFORMERS_NO_TF"] = "1"  # Prevent TensorFlow import issues
 
 import streamlit as st
 import pandas as pd
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
- 
+
+# Title
+st.set_page_config(page_title="SHL GenAI Assessment Recommendation Tool")
+st.title("SHL GenAI Assessment Recommendation Tool")
+
+# Load model (cached)
 @st.cache_resource
 def load_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
-model = load_model()
-
-st.title("SHL GenAI Assessment Recommendation Tool")
-
+with st.spinner("Loading embedding model..."):
+    model = load_model()
 
 # Load CSV data
 @st.cache_data
 def load_data():
     return pd.read_csv("datasets/shl_catalog.csv")
 
-# Load local embedding model
-@st.cache_resource
-def load_local_model():
-    return SentenceTransformer("all-MiniLM-L6-v2")
-
+# Get local embeddings
 def get_local_embedding(texts, model):
     return model.encode(texts)
 
+# Get OpenAI embeddings
 def get_openai_embedding(text):
     response = openai.Embedding.create(
         input=text,
@@ -38,18 +38,19 @@ def get_openai_embedding(text):
 
 # Streamlit UI and logic
 def main():
-    st.title("SHL GenAI Assessment Recommendation Tool")
     st.markdown("""
     This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).
     """)
 
-    # Sidebar options
+    # Sidebar
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-     
+    if use_openai:
+        openai.api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
+    # Load dataset
     df = load_data()
     st.subheader("Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
@@ -67,7 +68,6 @@ def main():
                     query_embedding = get_openai_embedding(job_description)
                     corpus_embeddings = [get_openai_embedding(desc) for desc in corpus]
                 else:
-                    model = load_local_model()
                     query_embedding = get_local_embedding([job_description], model)[0]
                     corpus_embeddings = get_local_embedding(corpus, model)
             except Exception as e:
@@ -89,6 +89,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
