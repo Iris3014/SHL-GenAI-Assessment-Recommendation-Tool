@@ -10,12 +10,10 @@ from sentence_transformers import SentenceTransformer
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 # Load CSV
-@st.cache_data
-def load_data():
-    base_path = os.path.dirname(__file__)
-    csv_path = os.path.join(base_path, "datasets", "shl_catalog.csv")
-    return pd.read_csv("shl_catalog.csv")
 
+    @st.cache_data
+def load_data():
+    return pd.read_csv("shl_catalog.csv")
 # Load embedding model
 @st.cache_resource
 def load_local_model():
