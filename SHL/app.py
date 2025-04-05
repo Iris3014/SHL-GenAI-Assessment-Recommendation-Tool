@@ -7,21 +7,14 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
-@st.cache_resource
-def load_model():
-    return SentenceTransformer("all-MiniLM-L6-v2")
-
-model = load_model()
-
-st.set_page_config(page_title="SHL GenAI Assessment Recommendation Tool")
-st.title("SHL GenAI Assessment Recommendation Tool")
+st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 # Load CSV data
 @st.cache_data
 def load_data():
     return pd.read_csv("datasets/shl_catalog.csv")
 
-# Local embedding model
+# Load local embedding model
 @st.cache_resource
 def load_local_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -36,8 +29,9 @@ def get_openai_embedding(text):
     )
     return response["data"][0]["embedding"]
 
-# UI and logic
+# Streamlit UI and logic
 def main():
+    st.title("SHL GenAI Assessment Recommendation Tool")
     st.markdown("""
     This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).
     """)
@@ -45,10 +39,9 @@ def main():
     # Sidebar options
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-    if use_openai:
-        openai.api_key = st.sidebar.text_input("Enter OpenAI API Key", type="password")
+     
 
-    job_description = st.text_area("\U0001F4C4 Paste the Job Description here:")
+    job_description = st.text_area("📄 Paste the Job Description here:")
 
     df = load_data()
     st.subheader("Available SHL Assessments")
@@ -63,7 +56,7 @@ def main():
             corpus = df["description"].tolist()
 
             try:
-                if use_openai and openai.api_key and len(openai.api_key.strip()) > 10:
+                if use_openai and openai.api_key:
                     query_embedding = get_openai_embedding(job_description)
                     corpus_embeddings = [get_openai_embedding(desc) for desc in corpus]
                 else:
@@ -78,7 +71,7 @@ def main():
             df["similarity"] = similarities
             top_matches = df.sort_values("similarity", ascending=False).head(3)
 
-            st.subheader("\u2705 Top Recommended Assessments")
+            st.subheader("✅ Top Recommended Assessments")
             for _, row in top_matches.iterrows():
                 st.markdown(f"### [{row['name']}]({row['url']})")
                 st.write(f"**Description:** {row['description']}")
@@ -89,3 +82,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
