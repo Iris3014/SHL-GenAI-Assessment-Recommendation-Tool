@@ -6,8 +6,15 @@ import pandas as pd
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
+ 
+@st.cache_resource
+def load_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
-st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
+model = load_model()
+
+st.title("SHL GenAI Assessment Recommendation Tool")
+
 
 # Load CSV data
 @st.cache_data
