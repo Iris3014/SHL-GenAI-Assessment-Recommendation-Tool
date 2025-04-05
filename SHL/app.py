@@ -14,7 +14,7 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 def load_data():
     base_path = os.path.dirname(__file__)
     csv_path = os.path.join(base_path, "datasets", "shl_catalog.csv")
-    return pd.read_csv(csv_path)
+    return pd.read_csv("shl_catalog.csv")
 
 # Load embedding model
 @st.cache_resource
