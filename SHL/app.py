@@ -14,7 +14,7 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 def load_data():
     csv_path = "dataset/shl_catalog.csv"
     if not os.path.exists(csv_path):
-        st.error("❌ Dataset not found. Make sure 'shl_catalog.csv' exists in the 'datasets' folder.")
+        st.error("❌ Dataset not found. Make sure 'shl_catalog.csv' exists in the 'dataset' folder.")
         st.stop()
     return pd.read_csv(csv_path)
 
