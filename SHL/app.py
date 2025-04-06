@@ -7,6 +7,9 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+model.save("./models/all-MiniLM-L6-v2")
+
 # Streamlit page config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
