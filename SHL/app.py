@@ -13,8 +13,7 @@ def load_data():
     csv_path = "SHL/dataset/shl_catalog.csv"  # ✅ This works in deployment
     return pd.read_csv(csv_path)
 
-
-# Load embedding model
+# Load local embedding model
 @st.cache_resource
 def load_local_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -29,7 +28,7 @@ def get_openai_embedding(text):
     )
     return response["data"][0]["embedding"]
 
-# Streamlit UI logic
+# Streamlit UI and logic
 def main():
     st.title("SHL GenAI Assessment Recommendation Tool")
     st.markdown("""
@@ -39,21 +38,49 @@ def main():
     # Sidebar options
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-    if use_openai:
-        openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password")
-    threshold = st.sidebar.slider("Minimum Similarity Threshold", 0.0, 1.0, 0.3, 0.01)
+     
 
-    # Input
-    job_description = st.text_area("📝 Paste the Job Description here:")
+    job_description = st.text_area("📄 Paste the Job Description here:")
 
-    # Load data
     df = load_data()
-    df["description"] = df["description"].fillna("")
-
     st.subheader("Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
 
-    # Matching logic would go here (not shown in your image)
+    if st.button("Recommend Assessments"):
+        if not job_description.strip():
+            st.warning("Please enter a job description first.")
+            return
+
+        with st.spinner("Analyzing and generating recommendations..."):
+            corpus = df["description"].tolist()
+
+            try:
+                if use_openai and openai.api_key:
+                    query_embedding = get_openai_embedding(job_description)
+                    corpus_embeddings = [get_openai_embedding(desc) for desc in corpus]
+                else:
+                    model = load_local_model()
+                    query_embedding = get_local_embedding([job_description], model)[0]
+                    corpus_embeddings = get_local_embedding(corpus, model)
+            except Exception as e:
+                st.error(f"Embedding failed: {e}")
+                return
+
+            similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
+            df["similarity"] = similarities
+            top_matches = df.sort_values("similarity", ascending=False).head(3)
+
+            st.subheader("✅ Top Recommended Assessments")
+            for _, row in top_matches.iterrows():
+                st.markdown(f"### [{row['name']}]({row['url']})")
+                st.write(f"**Description:** {row['description']}")
+                st.write(f"**Remote Testing:** {row['remote_testing']}")
+                st.write(f"**Adaptive Support:** {row['adaptive_support']}")
+                st.write(f"**Duration:** {row['duration']}")
+                st.progress(float(row["similarity"]))
 
 if __name__ == "__main__":
     main()
+
+
+
