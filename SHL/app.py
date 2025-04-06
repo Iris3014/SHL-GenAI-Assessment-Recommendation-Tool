@@ -11,7 +11,8 @@ from sentence_transformers import SentenceTransformer
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 # Load local model path
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "SHL", "all-MiniLM-L6-v2")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2")
+
 
 # Optional: Check if model exists
 if not os.path.exists(MODEL_PATH):
