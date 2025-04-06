@@ -12,12 +12,12 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 # Load CSV data
 @st.cache_data
-
 def load_data():
-
-csv_path = os.path.join(os.path.dirname(_file_), "dataset", "shl_catalog.csv")
-
-return pd.read_csv(csv_path)
+    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+    if not os.path.exists(csv_path):
+        st.error("❌ dataset/shl_catalog.csv not found. Please make sure the file exists.")
+        st.stop()
+    return pd.read_csv(csv_path)
 
 
 # Load local embedding model
