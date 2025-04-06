@@ -7,30 +7,28 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
+# Page config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 # Load CSV data
 @st.cache_data
 def load_data():
-    csv_path = "dataset/shl_catalog.csv"
-    if not os.path.exists(csv_path):
-        st.error("❌ Dataset not found. Make sure 'shl_catalog.csv' exists in the 'dataset' folder.")
+    file_path = "dataset/shl_catalog.csv"
+    if not os.path.exists(file_path):
+        st.error("❌ dataset/shl_catalog.csv not found. Please make sure the file exists.")
         st.stop()
-    return pd.read_csv(csv_path)
+    return pd.read_csv(file_path)
 
-# Load local model
+# Load local embedding model
 @st.cache_resource
 def load_local_model():
-    try:
-        return SentenceTransformer("all-MiniLM-L6-v2")
-    except Exception as e:
-        st.error(f"❌ Failed to load model: {e}")
-        st.stop()
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
-# Embedding functions
+# Local embedding
 def get_local_embedding(texts, model):
     return model.encode(texts)
 
+# OpenAI embedding
 def get_openai_embedding(text):
     response = openai.Embedding.create(
         input=text,
@@ -38,30 +36,29 @@ def get_openai_embedding(text):
     )
     return response["data"][0]["embedding"]
 
-# Streamlit UI and logic
+# Main app
 def main():
-    st.title("🧠 SHL GenAI Assessment Recommendation Tool")
-    st.markdown("This tool recommends relevant SHL assessments based on your job description using RAG (Retrieval-Augmented Generation).")
+    st.title("SHL GenAI Assessment Recommendation Tool")
+    st.markdown("This tool recommends SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).")
 
     # Sidebar
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-    
     if use_openai:
-        openai.api_key = st.sidebar.text_input("Enter OpenAI API Key", type="password")
+        openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
     df = load_data()
-    st.subheader("📚 Available SHL Assessments")
+    st.subheader("Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
 
-    if st.button("🔍 Recommend Assessments"):
+    if st.button("Recommend Assessments"):
         if not job_description.strip():
-            st.warning("⚠️ Please enter a job description first.")
+            st.warning("Please enter a job description first.")
             return
 
-        with st.spinner("🔎 Analyzing and generating recommendations..."):
+        with st.spinner("🔍 Analyzing and generating recommendations..."):
             corpus = df["description"].tolist()
 
             try:
@@ -82,11 +79,11 @@ def main():
 
             st.subheader("✅ Top Recommended Assessments")
             for _, row in top_matches.iterrows():
-                st.markdown(f"### 🔗 [{row['name']}]({row['url']})")
-                st.write(f"**📝 Description:** {row['description']}")
-                st.write(f"**🧪 Remote Testing:** {row['remote_testing']}")
-                st.write(f"**⚙️ Adaptive Support:** {row['adaptive_support']}")
-                st.write(f"**⏱️ Duration:** {row['duration']}")
+                st.markdown(f"### [{row['name']}]({row['url']})")
+                st.write(f"**Description:** {row['description']}")
+                st.write(f"**Remote Testing:** {row['remote_testing']}")
+                st.write(f"**Adaptive Support:** {row['adaptive_support']}")
+                st.write(f"**Duration:** {row['duration']}")
                 st.progress(float(row["similarity"]))
 
 if __name__ == "__main__":
