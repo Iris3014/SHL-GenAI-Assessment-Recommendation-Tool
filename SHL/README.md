@@ -1,15 +1,13 @@
----
+ ---
 title: SHL GenAI Assessment Recommender
-emoji: 🧠
+emoji: 📊
 colorFrom: blue
 colorTo: green
 sdk: streamlit
-sdk_version: "1.28.0"
+sdk_version: "1.32.0"
 app_file: app.py
 pinned: false
 ---
-
-This Streamlit app recommends SHL assessments based on a job description using local or OpenAI embeddings.
 
 # SHL GenAI RAG Tool
 
