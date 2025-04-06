@@ -13,7 +13,7 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
     @st.cache_data
 def load_data():
-    return pd.read_csv("SHL\datasets\shl_catalog.csv")
+    return pd.read_csv("SHL/datasets/shl_catalog.csv")
 # Load embedding model
 @st.cache_resource
 def load_local_model():
