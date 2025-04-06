@@ -11,7 +11,7 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 @st.cache_data
 def load_data():
-    csv_path = "datasets/shl_catalog.csv"  # ✅ This works in deployment
+    csv_path = "SHL/das/shl.csv"  # ✅ This works in deployment
     return pd.read_csv(csv_path)
 
 
