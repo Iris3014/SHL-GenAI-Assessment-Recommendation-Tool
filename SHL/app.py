@@ -7,21 +7,18 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-model.save("./models/all-MiniLM-L6-v2")
-
 # Streamlit page config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Load model
+# Load model from local directory
 @st.cache_resource
 def load_model():
-    return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    return SentenceTransformer("./models/all-MiniLM-L6-v2")  # Pre-downloaded model path
 
 # Load CSV data
 @st.cache_data
 def load_data():
-    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+    csv_path = os.path.join("dataset", "shl_catalog.csv")  # Relative path for Hugging Face
     return pd.read_csv(csv_path)
 
 # Embedding functions
