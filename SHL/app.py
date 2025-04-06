@@ -13,6 +13,9 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 # Load local model path
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "SHL", "all-MiniLM-L6-v2")
 
+# Optional: Check if model exists
+if not os.path.exists(MODEL_PATH):
+    st.error(f"Model not found at {MODEL_PATH}. Please check the path.")
 
 # Cache model load
 @st.cache_resource
