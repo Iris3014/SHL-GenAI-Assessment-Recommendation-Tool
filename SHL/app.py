@@ -10,18 +10,18 @@ from sentence_transformers import SentenceTransformer
 # Streamlit config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Local model path
-HF_MODEL_PATH = os.path.join(os.path.dirname(__file__), "SHL", "all-MiniLM-L6-v2")
+# Load local model path
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2")
 
 # Cache model load
 @st.cache_resource
 def load_local_model():
-    return SentenceTransformer(HF_MODEL_PATH)
+    return SentenceTransformer(MODEL_PATH)
 
 # Cache CSV load
 @st.cache_data
 def load_data():
-    csv_path = os.path.join(os.path.dirname(__file__), "SHL", "dataset", "shl_catalog.csv")
+    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
     return pd.read_csv(csv_path)
 
 # Embedding functions
@@ -43,15 +43,14 @@ def main():
     # Sidebar Settings
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-    openai.api_key = st.sidebar.text_input("🔑 Enter OpenAI API Key", type="password")
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
     df = load_data()
-    st.subheader("📋 Available SHL Assessments")
+    st.subheader("Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
 
-    if st.button("🚀 Recommend Assessments"):
+    if st.button("Recommend Assessments"):
         if not job_description.strip():
             st.warning("Please enter a job description first.")
             return
