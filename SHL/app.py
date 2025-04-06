@@ -1,25 +1,30 @@
 import os
-os.environ["TRANSFORMERS_NO_TF"] = "1"  # Prevent TensorFlow-related import issues
+os.environ["TRANSFORMERS_NO_TF"] = "1"  # Avoid TensorFlow issues
+
 import streamlit as st
 import pandas as pd
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer(os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2"))
-
+# Streamlit config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-@st.cache_data
-def load_data():
-    csv_path = "SHL/dataset/shl_catalog.csv"  # ✅ This works in deployment
-    return pd.read_csv(csv_path)
+# Load local model path
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2")
 
-# Load local embedding model
+# Cache model load
 @st.cache_resource
 def load_local_model():
-    return SentenceTransformer("SHL/all-MiniLM-L6-v2")
-    
+    return SentenceTransformer(MODEL_PATH)
+
+# Cache CSV load
+@st.cache_data
+def load_data():
+    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+    return pd.read_csv(csv_path)
+
+# Embedding functions
 def get_local_embedding(texts, model):
     return model.encode(texts)
 
@@ -30,17 +35,14 @@ def get_openai_embedding(text):
     )
     return response["data"][0]["embedding"]
 
-# Streamlit UI and logic
+# Main App
 def main():
     st.title("SHL GenAI Assessment Recommendation Tool")
-    st.markdown("""
-    This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).
-    """)
+    st.markdown("This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).")
 
-    # Sidebar options
+    # Sidebar Settings
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-     
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
@@ -83,6 +85,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
