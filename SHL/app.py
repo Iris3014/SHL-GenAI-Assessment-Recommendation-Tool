@@ -18,7 +18,7 @@ def load_model():
 # Cache CSV load
 @st.cache_data
 def load_data():
-    return pd.read_csv("shl_catalog.csv")
+    return pd.read_csv("dataset/shl_catalog.csv")
 
 # Embedding functions
 def get_local_embedding(texts, model):
