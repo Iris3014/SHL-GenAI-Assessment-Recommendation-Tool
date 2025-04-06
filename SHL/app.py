@@ -6,24 +6,17 @@ import pandas as pd
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
- 
-
 
 # Streamlit config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Load local model path
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2")
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-
-# Optional: Check if model exists
-if not os.path.exists(MODEL_PATH):
-    st.error(f"Model not found at {MODEL_PATH}. Please check the path.")
+# Set Hugging Face model name
+HF_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Cache model load
 @st.cache_resource
 def load_local_model():
-    return SentenceTransformer(MODEL_PATH)
+    return SentenceTransformer(HF_MODEL_NAME)
 
 # Cache CSV load
 @st.cache_data
@@ -50,6 +43,7 @@ def main():
     # Sidebar Settings
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
+    openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
