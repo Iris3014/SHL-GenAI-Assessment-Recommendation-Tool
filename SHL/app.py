@@ -5,73 +5,92 @@ import streamlit as st
 import pandas as pd
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 
-# Streamlit config
+# Streamlit page config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Cache CSV load
+# Model name from HuggingFace
+HF_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+# Cache the local model
+@st.cache_resource
+def load_local_model():
+    return SentenceTransformer(HF_MODEL_NAME)
+
+# Cache the dataset
 @st.cache_data
 def load_data():
     csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
     return pd.read_csv(csv_path)
 
-# OpenAI Embedding
-def get_openai_embedding(text, api_key):
-    openai.api_key = api_key
+# Local embedding
+def get_local_embedding(texts, model):
+    return model.encode(texts)
+
+# OpenAI embedding
+def get_openai_embedding(text):
     response = openai.Embedding.create(
         input=text,
         model="text-embedding-ada-002"
     )
     return response["data"][0]["embedding"]
 
-# Main App
+# Main app
 def main():
     st.title("SHL GenAI Assessment Recommendation Tool")
     st.markdown("This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).")
 
-    # Sidebar Settings
-    st.sidebar.title("Settings")
-    use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Requires API Key)", value=True)
-    api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+    # --- Sidebar Configuration ---
+    st.sidebar.title("🔧 Settings")
+    use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
+    api_key = st.sidebar.text_input("🔑 Enter OpenAI API Key", type="password")
+    if use_openai:
+        openai.api_key = api_key
 
+    # --- Job Description Input ---
     job_description = st.text_area("📄 Paste the Job Description here:")
 
+    # --- Load dataset ---
     df = load_data()
-    st.subheader("Available SHL Assessments")
+    st.subheader("📋 Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
 
-    if st.button("Recommend Assessments"):
+    # --- Recommendation Button ---
+    if st.button("🚀 Recommend Assessments"):
         if not job_description.strip():
             st.warning("Please enter a job description first.")
-            return
-
-        if use_openai and not api_key:
-            st.error("Please provide your OpenAI API key in the sidebar.")
             return
 
         with st.spinner("Analyzing and generating recommendations..."):
             corpus = df["description"].tolist()
 
             try:
-                query_embedding = get_openai_embedding(job_description, api_key)
-                corpus_embeddings = [get_openai_embedding(desc, api_key) for desc in corpus]
-
-                similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
-                df["similarity"] = similarities
-                top_matches = df.sort_values("similarity", ascending=False).head(3)
-
-                st.subheader("✅ Top Recommended Assessments")
-                for _, row in top_matches.iterrows():
-                    st.markdown(f"### [{row['name']}]({row['url']})")
-                    st.write(f"**Description:** {row['description']}")
-                    st.write(f"**Remote Testing:** {row['remote_testing']}")
-                    st.write(f"**Adaptive Support:** {row['adaptive_support']}")
-                    st.write(f"**Duration:** {row['duration']}")
-                    st.progress(float(row["similarity"]))
-
+                if use_openai and openai.api_key:
+                    query_embedding = get_openai_embedding(job_description)
+                    corpus_embeddings = [get_openai_embedding(desc) for desc in corpus]
+                else:
+                    model = load_local_model()
+                    query_embedding = get_local_embedding([job_description], model)[0]
+                    corpus_embeddings = get_local_embedding(corpus, model)
             except Exception as e:
                 st.error(f"Embedding failed: {e}")
                 return
+
+            # --- Similarity computation ---
+            similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
+            df["similarity"] = similarities
+            top_matches = df.sort_values("similarity", ascending=False).head(3)
+
+            # --- Display Top Matches ---
+            st.subheader("✅ Top Recommended Assessments")
+            for _, row in top_matches.iterrows():
+                st.markdown(f"### [{row['name']}]({row['url']})")
+                st.write(f"**Description:** {row['description']}")
+                st.write(f"**Remote Testing:** {row['remote_testing']}")
+                st.write(f"**Adaptive Support:** {row['adaptive_support']}")
+                st.write(f"**Duration:** {row['duration']}")
+                st.progress(float(row["similarity"]))
 
 if __name__ == "__main__":
     main()
