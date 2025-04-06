@@ -3,4 +3,4 @@ pandas
 scikit-learn
 openai
 sentence-transformers==2.2.2
-huggingface_hub
+huggingface-hub==0.16.4
