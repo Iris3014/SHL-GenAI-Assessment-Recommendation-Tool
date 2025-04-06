@@ -10,19 +10,15 @@ from sentence_transformers import SentenceTransformer
 # Streamlit config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Load local model path
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "all-MiniLM-L6-v2")
-
-# Cache model load
+# Cache model load from Hugging Face
 @st.cache_resource
-def load_local_model():
-    return SentenceTransformer(MODEL_PATH)
+def load_model():
+    return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 # Cache CSV load
 @st.cache_data
 def load_data():
-    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
-    return pd.read_csv(csv_path)
+    return pd.read_csv("dataset/shl_catalog.csv")
 
 # Embedding functions
 def get_local_embedding(texts, model):
@@ -63,7 +59,7 @@ def main():
                     query_embedding = get_openai_embedding(job_description)
                     corpus_embeddings = [get_openai_embedding(desc) for desc in corpus]
                 else:
-                    model = load_local_model()
+                    model = load_model()
                     query_embedding = get_local_embedding([job_description], model)[0]
                     corpus_embeddings = get_local_embedding(corpus, model)
             except Exception as e:
