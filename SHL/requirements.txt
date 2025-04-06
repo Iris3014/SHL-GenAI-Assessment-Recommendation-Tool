@@ -3,3 +3,4 @@ pandas
 scikit-learn
 sentence-transformers
 openai
+sentence-transformers==2.2.2
