@@ -21,13 +21,8 @@ def load_model():
 
 # Load SHL catalog dataset
 @st.cache_data
-def load_data():
-    try:
-        csv_path = os.path.join("dataset", "shl_catalog.csv")
-        return pd.read_csv(csv_path)
-    except Exception as e:
-        st.error(f"Failed to load dataset: {e}")
-        st.stop()
+ def load_data():
+    return pd.read_csv("datasets/shl_catalog.csv")
 
 # Get local embeddings
 def get_local_embedding(texts, model):
