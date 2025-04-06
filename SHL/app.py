@@ -9,8 +9,11 @@ from sentence_transformers import SentenceTransformer
 
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-csv_path = "datasets/shl_catalog.csv"
-df = pd.read_csv(csv_path)
+@st.cache_data
+def load_data():
+    csv_path = "datasets/shl_catalog.csv"  # ✅ This works in deployment
+    return pd.read_csv(csv_path)
+
 
 # Load embedding model
 @st.cache_resource
