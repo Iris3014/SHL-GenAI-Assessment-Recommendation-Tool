@@ -7,28 +7,27 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
-# Streamlit page config
+# Streamlit config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Model name from HuggingFace
-HF_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+# Local model path
+HF_MODEL_PATH = os.path.join(os.path.dirname(__file__), "SHL", "all-MiniLM-L6-v2")
 
-# Cache the local model
+# Cache model load
 @st.cache_resource
 def load_local_model():
-    return SentenceTransformer(HF_MODEL_NAME)
+    return SentenceTransformer(HF_MODEL_PATH)
 
-# Cache the dataset
+# Cache CSV load
 @st.cache_data
 def load_data():
-    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+    csv_path = os.path.join(os.path.dirname(__file__), "SHL", "dataset", "shl_catalog.csv")
     return pd.read_csv(csv_path)
 
-# Local embedding
+# Embedding functions
 def get_local_embedding(texts, model):
     return model.encode(texts)
 
-# OpenAI embedding
 def get_openai_embedding(text):
     response = openai.Embedding.create(
         input=text,
@@ -36,27 +35,22 @@ def get_openai_embedding(text):
     )
     return response["data"][0]["embedding"]
 
-# Main app
+# Main App
 def main():
     st.title("SHL GenAI Assessment Recommendation Tool")
     st.markdown("This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).")
 
-    # --- Sidebar Configuration ---
-    st.sidebar.title("🔧 Settings")
+    # Sidebar Settings
+    st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
-    api_key = st.sidebar.text_input("🔑 Enter OpenAI API Key", type="password")
-    if use_openai:
-        openai.api_key = api_key
+    openai.api_key = st.sidebar.text_input("🔑 Enter OpenAI API Key", type="password")
 
-    # --- Job Description Input ---
     job_description = st.text_area("📄 Paste the Job Description here:")
 
-    # --- Load dataset ---
     df = load_data()
     st.subheader("📋 Available SHL Assessments")
     st.dataframe(df.drop(columns=["url"]))
 
-    # --- Recommendation Button ---
     if st.button("🚀 Recommend Assessments"):
         if not job_description.strip():
             st.warning("Please enter a job description first.")
@@ -77,12 +71,10 @@ def main():
                 st.error(f"Embedding failed: {e}")
                 return
 
-            # --- Similarity computation ---
             similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
             df["similarity"] = similarities
             top_matches = df.sort_values("similarity", ascending=False).head(3)
 
-            # --- Display Top Matches ---
             st.subheader("✅ Top Recommended Assessments")
             for _, row in top_matches.iterrows():
                 st.markdown(f"### [{row['name']}]({row['url']})")
