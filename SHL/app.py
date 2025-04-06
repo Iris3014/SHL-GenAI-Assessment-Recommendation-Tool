@@ -1,5 +1,5 @@
 import os
-os.environ["TRANSFORMERS_NO_TF"] = "1"  # Avoid TensorFlow issues
+os.environ["TRANSFORMERS_NO_TF"] = "1"
 
 import streamlit as st
 import pandas as pd
@@ -7,19 +7,19 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
-# Streamlit config
+# Streamlit page config
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
-# Cache model load from Hugging Face
+# Load model
 @st.cache_resource
 def load_model():
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# Cache CSV load
+# Load CSV data
 @st.cache_data
-csv_path = os.path.join(os.path.dirname(_file_), "dataset", "shl_catalog.csv")
-
-return pd.read_csv(csv_path)
+def load_data():
+    csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+    return pd.read_csv(csv_path)
 
 # Embedding functions
 def get_local_embedding(texts, model):
@@ -35,11 +35,12 @@ def get_openai_embedding(text):
 # Main App
 def main():
     st.title("SHL GenAI Assessment Recommendation Tool")
-    st.markdown("This tool recommends relevant SHL assessments based on your job description using Retrieval-Augmented Generation (RAG).")
+    st.markdown("This tool recommends relevant SHL assessments based on your job description using RAG (Retrieval-Augmented Generation).")
 
-    # Sidebar Settings
+    # Sidebar
     st.sidebar.title("Settings")
     use_openai = st.sidebar.checkbox("Use OpenAI Embeddings (Needs API Key)")
+    openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password") if use_openai else None
 
     job_description = st.text_area("📄 Paste the Job Description here:")
 
