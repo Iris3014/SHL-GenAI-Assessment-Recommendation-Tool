@@ -16,8 +16,8 @@ def load_data():
 # Load local embedding model
 @st.cache_resource
 def load_local_model():
-    return SentenceTransformer("all-MiniLM-L6-v2")
-
+    return SentenceTransformer("SHL/all-MiniLM-L6-v2")
+    
 def get_local_embedding(texts, model):
     return model.encode(texts)
 
