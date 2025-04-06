@@ -6,6 +6,9 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+model.save("models/all-MiniLM-L6-v2")
+
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
 os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
