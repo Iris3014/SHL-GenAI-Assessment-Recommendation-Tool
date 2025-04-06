@@ -6,6 +6,10 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
+
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
+os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
+
 st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 
 @st.cache_data
