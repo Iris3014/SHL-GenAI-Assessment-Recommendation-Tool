@@ -15,7 +15,7 @@ st.set_page_config(page_title="SHL GenAI Assessment Recommender", layout="wide")
 def load_data():
     csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
     if not os.path.exists(csv_path):
-        st.error("❌ dataset/shl_catalog.csv not found. Please make sure the file exists.")
+        st.error("dataset/shl_catalog.csv not found. Please make sure the file exists.")
         st.stop()
     return pd.read_csv(csv_path)
 
@@ -48,7 +48,7 @@ def main():
     if use_openai:
         openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-    job_description = st.text_area("📄 Paste the Job Description here:")
+    job_description = st.text_area(" Paste the Job Description here:")
 
     df = load_data()
     st.subheader("Available SHL Assessments")
@@ -59,7 +59,7 @@ def main():
             st.warning("Please enter a job description first.")
             return
 
-        with st.spinner("🔍 Analyzing and generating recommendations..."):
+        with st.spinner("Analyzing and generating recommendations..."):
             corpus = df["description"].tolist()
 
             try:
@@ -71,14 +71,14 @@ def main():
                     query_embedding = get_local_embedding([job_description], model)[0]
                     corpus_embeddings = get_local_embedding(corpus, model)
             except Exception as e:
-                st.error(f"❌ Embedding failed: {e}")
+                st.error(f" Embedding failed: {e}")
                 return
 
             similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
             df["similarity"] = similarities
             top_matches = df.sort_values("similarity", ascending=False).head(3)
 
-            st.subheader("✅ Top Recommended Assessments")
+            st.subheader("Top Recommended Assessments")
             for _, row in top_matches.iterrows():
                 st.markdown(f"### [{row['name']}]({row['url']})")
                 st.write(f"**Description:** {row['description']}")
