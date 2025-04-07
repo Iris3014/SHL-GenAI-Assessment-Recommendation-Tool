@@ -48,7 +48,7 @@ def main():
     if use_openai:
         openai.api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-    job_description = st.text_area(" Paste the Job Description here:")
+    job_description = st.text_area("Paste the Job Description here:")
 
     df = load_data()
     st.subheader("Available SHL Assessments")
