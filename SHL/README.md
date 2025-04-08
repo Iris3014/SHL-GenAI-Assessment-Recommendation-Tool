@@ -38,3 +38,6 @@ SHL/
 ├── requirements.txt 
 └── README.md
 
+Note: Due to free-tier resource limits on Hugging Face Spaces, the deployed app link may temporarily be inactive.
+However, the project works as expected — screenshots from the localhost run are provided in the screenshots/ folder to demonstrate the functionality.
+Please refer to the codebase and the screenshots for a complete understanding.
