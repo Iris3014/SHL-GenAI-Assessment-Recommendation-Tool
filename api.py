@@ -12,19 +12,21 @@ app = FastAPI(title="SHL GenAI Recommender API")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return "<h2>Welcome to the SHL GenAI Assessment Recommendation Tool</h2>"
+    return "<h2>✅ Welcome to the SHL GenAI Assessment Recommendation Tool API</h2>"
 
-# Load CSV using relative or absolute path fallback
+# Absolute path to CSV
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-csv_path = os.path.join(BASE_DIR, "SHL", "dataset", "shl_catalog.csv")
+csv_path = os.path.join(BASE_DIR, "dataset", "shl_catalog.csv")  # ✅ Make sure this file exists!
 if not os.path.exists(csv_path):
-    csv_path = "shl_catalog.csv"  # fallback if not deployed in a folder
+    raise FileNotFoundError("❌ dataset/shl_catalog.csv not found!")
+
+# Load CSV
 df = pd.read_csv(csv_path).fillna("")
 
-# Load local sentence-transformers model
+# Load model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Pydantic response models
+# Pydantic Models
 class Assessment(BaseModel):
     name: str
     description: str
@@ -35,7 +37,7 @@ class Assessment(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[Assessment]
 
-# Embedding generators
+# Embedding functions
 def get_local_embedding(texts):
     return model.encode(texts)
 
@@ -44,7 +46,7 @@ def get_openai_embedding(text, api_key):
     response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
     return response["data"][0]["embedding"]
 
-# Recommendation API
+# /recommend endpoint
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
     job_description: str = Query(..., description="Job description text"),
@@ -60,12 +62,12 @@ def recommend(
         query_embedding = get_local_embedding([job_description])[0]
         corpus_embeddings = get_local_embedding(df["description"].tolist())
 
-    # Calculate similarity
+    # Similarity
     similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
     df["similarity"] = similarities
     top3 = df.sort_values("similarity", ascending=False).head(3)
 
-    # Build response
+    # Format response
     recommendations = [
         Assessment(
             name=row["name"],
