@@ -6,18 +6,24 @@ from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 import openai
+from fastapi.responses import HTMLResponse
 
+# ✅ Only ONE FastAPI app
 app = FastAPI(title="SHL GenAI Recommender API")
 
-# ✅ Load CSV dataset using absolute path based on this file’s location
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return "<h2>Welcome to the SHL GenAI Assessment Recommendation Tool</h2>"
+
+# ✅ Load dataset
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(BASE_DIR, "SHL", "dataset", "shl_catalog.csv")
 df = pd.read_csv(csv_path).fillna("")
 
-# Load local embedding model
+# ✅ Load local model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Response Models
+# ✅ Response Models
 class Assessment(BaseModel):
     name: str
     description: str
@@ -28,7 +34,7 @@ class Assessment(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[Assessment]
 
-# Embedding functions
+# ✅ Embedding functions
 def get_local_embedding(texts):
     return model.encode(texts)
 
@@ -36,7 +42,7 @@ def get_openai_embedding(text):
     response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
     return response["data"][0]["embedding"]
 
-# Main Recommendation Endpoint
+# ✅ Main endpoint
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
     job_description: str = Query(..., description="Job description text"),
