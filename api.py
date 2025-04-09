@@ -8,7 +8,6 @@ from sentence_transformers import SentenceTransformer
 import openai
 from fastapi.responses import HTMLResponse
 
-# Initialize FastAPI app
 app = FastAPI(title="SHL GenAI Recommender API")
 
 # Root route
@@ -16,19 +15,17 @@ app = FastAPI(title="SHL GenAI Recommender API")
 async def root():
     return "<h2>✅ Welcome to the SHL GenAI Assessment Recommendation Tool API</h2>"
 
-# Load CSV (make sure it's in the same directory as api.py)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-csv_path = os.path.join(BASE_DIR, "shl_catalog.csv")
-
+# === Load CSV dataset ===
+csv_path = os.path.join(os.path.dirname(__file__), "shl_catalog.csv")
 if not os.path.exists(csv_path):
     raise FileNotFoundError("❌ shl_catalog.csv not found in the same directory as api.py!")
 
 df = pd.read_csv(csv_path).fillna("")
 
-# Load SentenceTransformer model
+# === Load local embedding model ===
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Pydantic response models
+# === Pydantic Response Models ===
 class Assessment(BaseModel):
     name: str
     description: str
@@ -39,7 +36,7 @@ class Assessment(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[Assessment]
 
-# Embedding functions
+# === Embedding functions ===
 def get_local_embedding(texts):
     return model.encode(texts)
 
@@ -48,7 +45,7 @@ def get_openai_embedding(text, api_key):
     response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
     return response["data"][0]["embedding"]
 
-# Main endpoint
+# === Main Recommendation API ===
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
     job_description: str = Query(..., description="Job description text"),
