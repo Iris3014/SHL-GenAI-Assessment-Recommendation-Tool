@@ -8,25 +8,27 @@ from sentence_transformers import SentenceTransformer
 import openai
 from fastapi.responses import HTMLResponse
 
+# Initialize FastAPI app
 app = FastAPI(title="SHL GenAI Recommender API")
 
+# Root route
 @app.get("/", response_class=HTMLResponse)
 async def root():
     return "<h2>✅ Welcome to the SHL GenAI Assessment Recommendation Tool API</h2>"
 
-# Absolute path to CSV
+# Load CSV (make sure it's in the same directory as api.py)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-csv_path = os.path.join(BASE_DIR, "dataset", "shl_catalog.csv")  # ✅ Make sure this file exists!
-if not os.path.exists(csv_path):
-    raise FileNotFoundError("❌ dataset/shl_catalog.csv not found!")
+csv_path = os.path.join(BASE_DIR, "shl_catalog.csv")
 
-# Load CSV
+if not os.path.exists(csv_path):
+    raise FileNotFoundError("❌ shl_catalog.csv not found in the same directory as api.py!")
+
 df = pd.read_csv(csv_path).fillna("")
 
-# Load model
+# Load SentenceTransformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Pydantic Models
+# Pydantic response models
 class Assessment(BaseModel):
     name: str
     description: str
@@ -46,7 +48,7 @@ def get_openai_embedding(text, api_key):
     response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
     return response["data"][0]["embedding"]
 
-# /recommend endpoint
+# Main endpoint
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
     job_description: str = Query(..., description="Job description text"),
@@ -62,12 +64,10 @@ def recommend(
         query_embedding = get_local_embedding([job_description])[0]
         corpus_embeddings = get_local_embedding(df["description"].tolist())
 
-    # Similarity
     similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
     df["similarity"] = similarities
     top3 = df.sort_values("similarity", ascending=False).head(3)
 
-    # Format response
     recommendations = [
         Assessment(
             name=row["name"],
