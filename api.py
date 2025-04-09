@@ -77,4 +77,4 @@ def recommend(
         for _, row in top3.iterrows()
     ]
 
-    return RecommendationResponse(recommendations=recommendations)
+    return RecommendationResponse(recommendations=recommendations) 
