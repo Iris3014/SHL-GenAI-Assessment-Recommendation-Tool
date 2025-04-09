@@ -12,19 +12,19 @@ app = FastAPI(title="SHL GenAI Recommender API")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return "<h2>✅ Welcome to the SHL GenAI Assessment Recommendation Tool API</h2>"
+    return "<h2>Welcome to the SHL GenAI Assessment Recommendation Tool</h2>"
 
-# ✅ Ensure the dataset is in the same folder
-csv_path = os.path.join(os.path.dirname(__file__), "shl_catalog.csv")
+# Load CSV using relative or absolute path fallback
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(BASE_DIR, "SHL", "dataset", "shl_catalog.csv")
 if not os.path.exists(csv_path):
-    raise FileNotFoundError("❌ shl_catalog.csv not found in the same directory as api.py!")
-
+    csv_path = "shl_catalog.csv"  # fallback if not deployed in a folder
 df = pd.read_csv(csv_path).fillna("")
 
-# Load local model
+# Load local sentence-transformers model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Response Models
+# Pydantic response models
 class Assessment(BaseModel):
     name: str
     description: str
@@ -35,7 +35,7 @@ class Assessment(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[Assessment]
 
-# Embedding functions
+# Embedding generators
 def get_local_embedding(texts):
     return model.encode(texts)
 
@@ -47,9 +47,9 @@ def get_openai_embedding(text, api_key):
 # Recommendation API
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
-    job_description: str = Query(...),
-    use_openai: bool = Query(False),
-    openai_key: str = Query(None)
+    job_description: str = Query(..., description="Job description text"),
+    use_openai: bool = Query(False, description="Use OpenAI embeddings"),
+    openai_key: str = Query(None, description="OpenAI API key if use_openai is true")
 ):
     if use_openai:
         if not openai_key:
@@ -60,10 +60,12 @@ def recommend(
         query_embedding = get_local_embedding([job_description])[0]
         corpus_embeddings = get_local_embedding(df["description"].tolist())
 
+    # Calculate similarity
     similarities = cosine_similarity([query_embedding], corpus_embeddings)[0]
     df["similarity"] = similarities
     top3 = df.sort_values("similarity", ascending=False).head(3)
 
+    # Build response
     recommendations = [
         Assessment(
             name=row["name"],
