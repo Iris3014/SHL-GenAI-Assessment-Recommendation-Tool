@@ -9,8 +9,9 @@ import openai
 
 app = FastAPI(title="SHL GenAI Recommender API")
 
-# Load CSV dataset
-csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
+# ✅ Load CSV dataset using absolute path based on this file’s location
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(BASE_DIR, "dataset", "shl_catalog.csv")
 df = pd.read_csv(csv_path).fillna("")
 
 # Load local embedding model
