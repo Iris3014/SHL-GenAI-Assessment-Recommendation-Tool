@@ -1,0 +1,6 @@
+name,description,remote_testing,adaptive_support,duration,url
+Cognitive Ability Test,"Measures problem-solving ability, logical reasoning, and verbal/numerical aptitude.",Yes,Yes,45 minutes,https://www.shl.com/en/assessments/cognitive-ability/
+Personality Test,"Assesses behavioral traits and work preferences to understand role fit and team compatibility.",Yes,No,30 minutes,https://www.shl.com/en/assessments/personality/
+Situational Judgment Test (SJT),"Evaluates decision-making and judgment in hypothetical work-related scenarios.",Yes,Yes,20 minutes,https://www.shl.com/en/assessments/situational-judgement/
+Technical Skills Test - Java,"Assesses hands-on coding ability and understanding of Java programming.",Yes,No,60 minutes,https://www.shl.com/en/assessments/technical/
+English Language Proficiency Test,"Tests grammar, vocabulary, reading comprehension and written English.",Yes,Yes,25 minutes,https://www.shl.com/en/assessments/language/
