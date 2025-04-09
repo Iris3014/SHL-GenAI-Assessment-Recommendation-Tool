@@ -9,13 +9,14 @@ import openai
 
 app = FastAPI(title="SHL GenAI Recommender API")
 
-# Load dataset
+# Load CSV dataset
 csv_path = os.path.join(os.path.dirname(__file__), "dataset", "shl_catalog.csv")
-df = pd.read_csv(csv_path)
+df = pd.read_csv(csv_path).fillna("")
 
-# Load local model once
+# Load local embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+# Response Models
 class Assessment(BaseModel):
     name: str
     description: str
@@ -26,6 +27,7 @@ class Assessment(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[Assessment]
 
+# Embedding functions
 def get_local_embedding(texts):
     return model.encode(texts)
 
@@ -33,15 +35,16 @@ def get_openai_embedding(text):
     response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
     return response["data"][0]["embedding"]
 
+# Main Recommendation Endpoint
 @app.get("/recommend", response_model=RecommendationResponse)
 def recommend(
-    job_description: str = Query(...),
-    use_openai: bool = Query(False),
-    openai_key: str = Query(None)
+    job_description: str = Query(..., description="Job description text"),
+    use_openai: bool = Query(False, description="Use OpenAI embeddings"),
+    openai_key: str = Query(None, description="OpenAI API key if use_openai is true")
 ):
     if use_openai:
         if not openai_key:
-            return {"error": "Missing OpenAI key."}
+            return {"recommendations": []}
         openai.api_key = openai_key
         query_embedding = get_openai_embedding(job_description)
         corpus_embeddings = [get_openai_embedding(desc) for desc in df["description"]]
@@ -54,14 +57,14 @@ def recommend(
     top3 = df.sort_values("similarity", ascending=False).head(3)
 
     recommendations = [
-        {
-            "name": row["name"],
-            "description": row["description"],
-            "duration": row["duration"],
-            "remote_testing": row["remote_testing"],
-            "adaptive_support": row["adaptive_support"],
-        }
+        Assessment(
+            name=row["name"],
+            description=row["description"],
+            duration=row["duration"],
+            remote_testing=row["remote_testing"],
+            adaptive_support=row["adaptive_support"]
+        )
         for _, row in top3.iterrows()
     ]
 
-    return {"recommendations": recommendations}
+    return RecommendationResponse(recommendations=recommendations)
